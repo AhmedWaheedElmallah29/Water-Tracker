@@ -4,7 +4,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 
 // Load environment variables
-dotenv.config({ path: __dirname + "/.env" });
+dotenv.config({ path: __dirname + "/config.env" });
 
 const app = express();
 
@@ -396,6 +396,9 @@ app.get("/api/water/reminder", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
+const waterRoutes = require("./routes/waterRoutes");
+app.use("/api/water", waterRoutes);
 
 // Basic route
 app.get("/", (req, res) => {

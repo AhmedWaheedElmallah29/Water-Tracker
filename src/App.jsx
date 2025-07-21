@@ -31,6 +31,11 @@ function App() {
   const [removeAmount, setRemoveAmount] = useState("");
   const [newGoal, setNewGoal] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editAmount, setEditAmount] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [editHistoryEntry, setEditHistoryEntry] = useState(null);
+  const [editHistoryAmount, setEditHistoryAmount] = useState(0);
 
   useEffect(() => {
     fetchTodayData();
@@ -137,6 +142,27 @@ function App() {
     } catch (error) {
       alert("Failed to reset water data.");
       setShowResetModal(false);
+    }
+  };
+
+  // Edit any history entry
+  const handleEditHistory = (entry) => {
+    setEditHistoryEntry(entry);
+    setEditHistoryAmount(entry.amount);
+  };
+
+  const handleUpdateHistory = async () => {
+    if (!editHistoryEntry) return;
+    try {
+      await axios.put(`${API_BASE_URL}/update-by-id/${editHistoryEntry._id}`, {
+        amount: parseInt(editHistoryAmount),
+      });
+      setEditHistoryEntry(null);
+      setSuccessMessage("Entry updated!");
+      fetchHistory();
+      setTimeout(() => setSuccessMessage(""), 2000);
+    } catch (error) {
+      alert("Failed to update entry.");
     }
   };
 
@@ -463,37 +489,47 @@ function App() {
           >
             <h3>Water History</h3>
             <div className="history-list">
-              {history.map((entry) => (
-                <div key={entry._id} className="history-item">
-                  <div className="history-date">
-                    {new Date(entry.date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </div>
-                  <div className="history-progress">
-                    <div className="history-bar">
-                      <div
-                        className="history-fill"
-                        style={{
-                          width: `${Math.min(
-                            (entry.amount / (entry.goal * 1000)) * 100,
-                            100
-                          )}%`,
-                          backgroundColor:
-                            entry.amount >= entry.goal * 1000
-                              ? "var(--success-green)"
-                              : "var(--primary-blue)",
-                        }}
-                      ></div>
+              {history
+                .filter((entry) => new Date(entry.date) <= new Date())
+                .map((entry) => (
+                  <div key={entry._id} className="history-item">
+                    <div className="history-date">
+                      {new Date(entry.date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </div>
+                    <div className="history-progress">
+                      <div className="history-bar">
+                        <div
+                          className="history-fill"
+                          style={{
+                            width: `${Math.min(
+                              (entry.amount / (entry.goal * 1000)) * 100,
+                              100
+                            )}%`,
+                            backgroundColor:
+                              entry.amount >= entry.goal * 1000
+                                ? "var(--success-green)"
+                                : "var(--primary-blue)",
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="history-amount">
+                      {entry.amount}ml / {entry.goal}L
+                    </div>
+                    <button
+                      className="btn btn-primary"
+                      style={{ marginLeft: 8 }}
+                      onClick={() => handleEditHistory(entry)}
+                      disabled={new Date(entry.date) > new Date()}
+                    >
+                      Edit
+                    </button>
                   </div>
-                  <div className="history-amount">
-                    {entry.amount}ml / {entry.goal}L
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
             <button
               className="btn btn-primary"
@@ -501,6 +537,48 @@ function App() {
             >
               Close
             </button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit History Entry Modal */}
+      {editHistoryEntry && (
+        <div
+          className="modal-overlay"
+          onClick={() => setEditHistoryEntry(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>Edit Water Amount</h3>
+            <div style={{ marginBottom: 12 }}>
+              {new Date(editHistoryEntry.date).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
+            <input
+              type="number"
+              value={editHistoryAmount}
+              onChange={(e) => setEditHistoryAmount(e.target.value)}
+              min={0}
+            />
+            <div className="modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setEditHistoryEntry(null)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={handleUpdateHistory}>
+                Update
+              </button>
+            </div>
           </motion.div>
         </div>
       )}
@@ -532,6 +610,11 @@ function App() {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Success Message Toast */}
+      {successMessage && (
+        <div className="toast success-toast">{successMessage}</div>
       )}
     </div>
   );
