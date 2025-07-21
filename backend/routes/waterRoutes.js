@@ -2,23 +2,31 @@ const express = require("express");
 const router = express.Router();
 const WaterEntry = require("../models/WaterEntry");
 const { body, validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+
+// Import authMiddleware from server.js
+const authMiddleware = require("../middleware/auth");
+
+// All routes below require authentication
+router.use(authMiddleware);
 
 // Get today's water data
 router.get("/today", async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     let waterEntry = await WaterEntry.findOne({
+      user: req.user.userId,
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
       },
     });
-
     if (!waterEntry) {
       // Create new entry for today
       waterEntry = new WaterEntry({
+        user: req.user.userId,
         date: today,
         amount: 0,
         goal: 2000,
@@ -26,7 +34,6 @@ router.get("/today", async (req, res) => {
       });
       await waterEntry.save();
     }
-
     res.json(waterEntry);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -52,6 +59,7 @@ router.post(
       today.setHours(0, 0, 0, 0);
 
       let waterEntry = await WaterEntry.findOne({
+        user: req.user.userId,
         date: {
           $gte: today,
           $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -60,6 +68,7 @@ router.post(
 
       if (!waterEntry) {
         waterEntry = new WaterEntry({
+          user: req.user.userId,
           date: today,
           amount: 0,
           goal: 2000,
@@ -100,6 +109,7 @@ router.put(
       today.setHours(0, 0, 0, 0);
 
       let waterEntry = await WaterEntry.findOne({
+        user: req.user.userId,
         date: {
           $gte: today,
           $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -108,6 +118,7 @@ router.put(
 
       if (!waterEntry) {
         waterEntry = new WaterEntry({
+          user: req.user.userId,
           date: today,
           amount: 0,
           goal: goal,
@@ -144,6 +155,7 @@ router.put(
       const date = new Date(dateParam);
       // البحث باليوم والشهر والسنة فقط
       let waterEntry = await WaterEntry.findOne({
+        user: req.user.userId,
         $expr: {
           $and: [
             { $eq: [{ $dayOfMonth: "$date" }, date.getDate()] },
@@ -227,6 +239,7 @@ router.get("/history", async (req, res) => {
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
     const history = await WaterEntry.find({
+      user: req.user.userId,
       date: { $gte: sevenDaysAgo, $lte: today },
     }).sort({ date: -1 });
 
@@ -239,7 +252,9 @@ router.get("/history", async (req, res) => {
 // Get all water data
 router.get("/all", async (req, res) => {
   try {
-    const allEntries = await WaterEntry.find().sort({ date: -1 });
+    const allEntries = await WaterEntry.find({ user: req.user.userId }).sort({
+      date: -1,
+    });
     res.json(allEntries);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

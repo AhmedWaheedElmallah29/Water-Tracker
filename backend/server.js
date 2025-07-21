@@ -41,6 +41,58 @@ mongoose
 
 // Import WaterEntry model
 const WaterEntry = require("./models/WaterEntry");
+const User = require("./models/User");
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+
+// Auth: Sign Up
+app.post("/api/auth/signup", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password)
+      return res
+        .status(400)
+        .json({ message: "Username and password required" });
+    const existing = await User.findOne({ username });
+    if (existing)
+      return res.status(409).json({ message: "Username already exists" });
+    const user = new User({ username, password });
+    await user.save();
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.json({ token, username: user.username });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Auth: Sign In
+app.post("/api/auth/signin", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password)
+      return res
+        .status(400)
+        .json({ message: "Username and password required" });
+    const user = await User.findOne({ username });
+    if (!user)
+      return res.status(401).json({ message: "Invalid username or password" });
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid username or password" });
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.json({ token, username: user.username });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
 
 // Routes
 app.get("/api/water/today", async (req, res) => {

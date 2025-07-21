@@ -8,20 +8,93 @@ import {
   FaCrosshairs,
   FaRedo,
 } from "react-icons/fa";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import Login from "./Login";
 import "./App.css";
+
+function SignUp({ onSignUp }) {
+  const [username, setUsername] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/auth/signup", { username, password });
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("username", res.data.username);
+      localStorage.setItem("isAuthenticated", "true");
+      setLoading(false);
+      if (onSignUp) onSignUp();
+      navigate("/");
+    } catch (err) {
+      setLoading(false);
+      setError(
+        err.response?.data?.message || "Sign up failed. Please try again."
+      );
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <form className="login-form" onSubmit={handleSubmit}>
+        <div className="login-logo">
+          <FaTint className="logo-icon" />
+          <h1>Water Tracker</h1>
+        </div>
+        <h2>Sign Up</h2>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          autoFocus
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+        {error && <div className="login-error">{error}</div>}
+        <button className="btn btn-primary" type="submit" disabled={loading}>
+          {loading ? "Signing up..." : "Sign Up"}
+        </button>
+        <div className="login-signup-link">
+          Already have an account? <a href="/login">Login</a>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api/water";
 
 const BOTTLE_SIZES = [
-  { name: "Small Glass", size: 200, icon: "🥤" },
-  { name: "Regular Glass", size: 250, icon: "🥤" },
-  { name: "Large Glass", size: 350, icon: "🥤" },
-  { name: "Water Bottle", size: 500, icon: "💧" },
-  { name: "Large Bottle", size: 750, icon: "💧" },
-  { name: "Sports Bottle", size: 1000, icon: "🏃" },
+  { name: "Small Glass", size: 200, icon: "\ud83e\udd64" },
+  { name: "Regular Glass", size: 250, icon: "\ud83e\udd64" },
+  { name: "Large Glass", size: 350, icon: "\ud83e\udd64" },
+  { name: "Water Bottle", size: 500, icon: "\ud83d\udca7" },
+  { name: "Large Bottle", size: 750, icon: "\ud83d\udca7" },
+  { name: "Sports Bottle", size: 1000, icon: "\ud83c\udfc3" },
 ];
 
-function App() {
+function ProtectedApp() {
   const [todayData, setTodayData] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -617,6 +690,41 @@ function App() {
         <div className="toast success-toast">{successMessage}</div>
       )}
     </div>
+  );
+}
+
+function App() {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem("isAuthenticated") === "true";
+  });
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          <Login
+            onLogin={() => {
+              localStorage.setItem("isAuthenticated", "true");
+              setIsAuthenticated(true);
+              navigate("/");
+            }}
+          />
+        }
+      />
+      <Route
+        path="/signup"
+        element={<SignUp onSignUp={() => setIsAuthenticated(true)} />}
+      />
+      <Route path="/*" element={isAuthenticated ? <ProtectedApp /> : null} />
+    </Routes>
   );
 }
 
