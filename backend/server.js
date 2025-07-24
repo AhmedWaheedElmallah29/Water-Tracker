@@ -49,6 +49,7 @@ app.get("/api/water/today", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -58,6 +59,7 @@ app.get("/api/water/today", async (req, res) => {
     if (!waterEntry) {
       // Create new entry for today
       waterEntry = new WaterEntry({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         date: today,
         amount: 0,
         goal: 3, // 3L default goal
@@ -88,6 +90,7 @@ app.post("/api/water/add", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -96,6 +99,7 @@ app.post("/api/water/add", async (req, res) => {
 
     if (!waterEntry) {
       waterEntry = new WaterEntry({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         date: today,
         amount: 0,
         goal: 3, // 3L default goal
@@ -130,6 +134,7 @@ app.put("/api/water/goal", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -138,6 +143,7 @@ app.put("/api/water/goal", async (req, res) => {
 
     if (!waterEntry) {
       waterEntry = new WaterEntry({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         date: today,
         amount: 0,
         goal: goal,
@@ -158,7 +164,11 @@ app.put("/api/water/goal", async (req, res) => {
 // Get water history (last 30 days)
 app.get("/api/water/history", async (req, res) => {
   try {
-    const history = await WaterEntry.find().sort({ date: -1 }).limit(30);
+    const history = await WaterEntry.find({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
+    })
+      .sort({ date: -1 })
+      .limit(30);
     res.json(history);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -167,7 +177,9 @@ app.get("/api/water/history", async (req, res) => {
 
 app.get("/api/water/all", async (req, res) => {
   try {
-    const allEntries = await WaterEntry.find().sort({ date: -1 });
+    const allEntries = await WaterEntry.find({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
+    }).sort({ date: -1 });
     res.json(allEntries);
   } catch (error) {
     console.error("Error fetching all entries:", error);
@@ -183,6 +195,7 @@ app.delete("/api/water/remove/:entryId", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -245,6 +258,7 @@ app.delete("/api/water/remove-amount", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -288,6 +302,7 @@ app.post("/api/water/reset", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -319,6 +334,7 @@ app.post("/api/water/reset-goal", async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -326,6 +342,7 @@ app.post("/api/water/reset-goal", async (req, res) => {
     });
     if (!waterEntry) {
       waterEntry = new WaterEntry({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         date: today,
         amount: 0,
         goal: 3,
@@ -349,6 +366,7 @@ app.get("/api/water/reminder", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),

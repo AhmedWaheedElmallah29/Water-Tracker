@@ -34,13 +34,18 @@ const waterEntrySchema = new mongoose.Schema(
         },
       },
     ],
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Create a compound index for date to ensure one entry per day
-waterEntrySchema.index({ date: 1 }, { unique: true });
+// Create a compound index for userId and date to ensure one entry per user per day
+waterEntrySchema.index({ userId: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model("WaterEntry", waterEntrySchema);

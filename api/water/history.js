@@ -1,4 +1,5 @@
 import { connectDB, WaterEntry } from "../utils/db.js";
+import mongoose from "mongoose";
 
 export default async (req, res) => {
   // Enable CORS
@@ -26,6 +27,7 @@ export default async (req, res) => {
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
     const history = await WaterEntry.find({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: { $gte: sevenDaysAgo },
     }).sort({ date: -1 });
 

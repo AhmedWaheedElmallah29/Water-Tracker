@@ -1,4 +1,5 @@
 import { connectDB, WaterEntry } from "../utils/db.js";
+import mongoose from "mongoose";
 
 export default async (req, res) => {
   // Enable CORS
@@ -32,6 +33,7 @@ export default async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),

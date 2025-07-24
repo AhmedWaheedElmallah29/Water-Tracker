@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const WaterEntry = require("../models/WaterEntry");
 const { body, validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 
 // Get today's water data
 router.get("/today", async (req, res) => {
@@ -10,6 +11,7 @@ router.get("/today", async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     let waterEntry = await WaterEntry.findOne({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -19,6 +21,7 @@ router.get("/today", async (req, res) => {
     if (!waterEntry) {
       // Create new entry for today
       waterEntry = new WaterEntry({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         date: today,
         amount: 0,
         goal: 2000,
@@ -52,6 +55,7 @@ router.post(
       today.setHours(0, 0, 0, 0);
 
       let waterEntry = await WaterEntry.findOne({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         date: {
           $gte: today,
           $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -60,6 +64,7 @@ router.post(
 
       if (!waterEntry) {
         waterEntry = new WaterEntry({
+          userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
           date: today,
           amount: 0,
           goal: 2000,
@@ -100,6 +105,7 @@ router.put(
       today.setHours(0, 0, 0, 0);
 
       let waterEntry = await WaterEntry.findOne({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         date: {
           $gte: today,
           $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
@@ -108,6 +114,7 @@ router.put(
 
       if (!waterEntry) {
         waterEntry = new WaterEntry({
+          userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
           date: today,
           amount: 0,
           goal: goal,
@@ -144,6 +151,7 @@ router.put(
       const date = new Date(dateParam);
       // البحث باليوم والشهر والسنة فقط
       let waterEntry = await WaterEntry.findOne({
+        userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
         $expr: {
           $and: [
             { $eq: [{ $dayOfMonth: "$date" }, date.getDate()] },
@@ -227,6 +235,7 @@ router.get("/history", async (req, res) => {
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
     const history = await WaterEntry.find({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
       date: { $gte: sevenDaysAgo, $lte: today },
     }).sort({ date: -1 });
 
@@ -239,7 +248,9 @@ router.get("/history", async (req, res) => {
 // Get all water data
 router.get("/all", async (req, res) => {
   try {
-    const allEntries = await WaterEntry.find().sort({ date: -1 });
+    const allEntries = await WaterEntry.find({
+      userId: new mongoose.Types.ObjectId("6881b5f3d84336ef256501ec"),
+    }).sort({ date: -1 });
     res.json(allEntries);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
